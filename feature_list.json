@@ -1,0 +1,106 @@
+{
+  "project": "obsidian-github-tasks-enhancement",
+  "description": "Per-note repository tracking for PARA method integration",
+  "created": "2025-12-10",
+  "features": [
+    {
+      "id": "F001",
+      "name": "Settings infrastructure",
+      "description": "Add new settings interface fields for per-note mode: enablePerNoteSync, perNoteScanFolders, excludeArchivedNotes, activitySummaryEnabled, activitySummaryDays, activityTypes",
+      "status": "pending",
+      "passes": false,
+      "dependencies": [],
+      "files": ["src/settings.ts"],
+      "acceptance": "New settings load/save correctly, defaults work, TypeScript compiles"
+    },
+    {
+      "id": "F002",
+      "name": "GitHub client extensions",
+      "description": "Add repository-specific API methods: getRepoOpenIssues, getRepoOpenPRs, getRepoRecentCommits, getRepoRecentMergedPRs, getRepoRecentClosedIssues, getRepoReleases",
+      "status": "pending",
+      "passes": false,
+      "dependencies": [],
+      "files": ["src/github.ts"],
+      "acceptance": "API methods return data for a test repository, CORS handling works"
+    },
+    {
+      "id": "F003",
+      "name": "Frontmatter parsing",
+      "description": "Parse github-repo and github-sync fields from YAML frontmatter in notes",
+      "status": "pending",
+      "passes": false,
+      "dependencies": [],
+      "files": ["src/repo-sync.ts"],
+      "acceptance": "Correctly extracts owner/repo from frontmatter, handles missing/malformed cases"
+    },
+    {
+      "id": "F004",
+      "name": "Vault scanner",
+      "description": "Scan vault for notes with github-repo frontmatter, with folder filtering and archive exclusion (PARA-aware)",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F003"],
+      "files": ["src/vault-scanner.ts"],
+      "acceptance": "Finds all repo-linked notes, respects folder filters, skips archives"
+    },
+    {
+      "id": "F005",
+      "name": "Section management",
+      "description": "Find/create managed sections with markers (BEGIN_GITHUB_MANAGED/END_GITHUB_MANAGED) for issues, PRs, and activity",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F003"],
+      "files": ["src/repo-sync.ts"],
+      "acceptance": "Creates sections if missing, updates only managed content, preserves user content"
+    },
+    {
+      "id": "F006",
+      "name": "Issue/PR sync for repo",
+      "description": "Sync open issues and PRs from a repository into note sections, using existing task formatting patterns",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F002", "F005"],
+      "files": ["src/repo-sync.ts", "src/utils.ts"],
+      "acceptance": "Issues and PRs appear in correct sections with proper formatting and ^gh-ID tracking"
+    },
+    {
+      "id": "F007",
+      "name": "Activity summary",
+      "description": "Generate recent activity summary section showing commits, merged PRs, closed issues, releases within configured time window",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F002", "F005"],
+      "files": ["src/repo-sync.ts", "src/utils.ts"],
+      "acceptance": "Activity summary renders correctly, respects time window setting, handles empty activity"
+    },
+    {
+      "id": "F008",
+      "name": "Multi-note orchestration",
+      "description": "Process all discovered repo notes during sync cycle, with error isolation (one note's failure doesn't break others)",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F004", "F006", "F007"],
+      "files": ["src/main.ts"],
+      "acceptance": "All repo notes sync, errors logged but isolated, existing single-note mode unaffected"
+    },
+    {
+      "id": "F009",
+      "name": "Settings UI",
+      "description": "Add UI controls for new settings: toggles, folder input, activity type checkboxes",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F001"],
+      "files": ["src/settings.ts"],
+      "acceptance": "All new settings have working UI controls, changes persist correctly"
+    },
+    {
+      "id": "F010",
+      "name": "Integration testing",
+      "description": "End-to-end testing of full workflow: create test note with frontmatter, run sync, verify output",
+      "status": "pending",
+      "passes": false,
+      "dependencies": ["F008", "F009"],
+      "acceptance": "Full workflow works in Obsidian, backward compatibility verified, edge cases handled"
+    }
+  ]
+}
