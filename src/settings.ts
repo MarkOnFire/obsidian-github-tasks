@@ -15,6 +15,19 @@ export interface GitHubTasksSettings {
   autoClearCompleted: boolean;
   showCreatedAt: boolean;
   showCompletedAt: boolean;
+  
+  // Per-note sync settings
+  enablePerNoteSync: boolean;
+  perNoteScanFolders: string[];
+  excludeArchivedNotes: boolean;
+  activitySummaryEnabled: boolean;
+  activitySummaryDays: number;
+  activityTypes: {
+    commits: boolean;
+    mergedPRs: boolean;
+    closedIssues: boolean;
+    releases: boolean;
+  };
 }
 
 export const DEFAULT_SETTINGS: GitHubTasksSettings = {
@@ -29,6 +42,19 @@ export const DEFAULT_SETTINGS: GitHubTasksSettings = {
   autoClearCompleted: false,
   showCreatedAt: false,
   showCompletedAt: true,
+  
+  // Per-note sync defaults
+  enablePerNoteSync: false,
+  perNoteScanFolders: [],
+  excludeArchivedNotes: true,
+  activitySummaryEnabled: true,
+  activitySummaryDays: 7,
+  activityTypes: {
+    commits: true,
+    mergedPRs: true,
+    closedIssues: true,
+    releases: true,
+  },
 };
 
 export class GitHubTasksSettingsTab extends PluginSettingTab {
@@ -217,6 +243,129 @@ export class GitHubTasksSettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    // --- Per-Note Repository Tracking Settings ---
+    containerEl.createEl("h2", { text: "Per-Note Repository Tracking" });
+
+    new Setting(containerEl)
+      .setName("Enable per-note sync")
+      .setDesc("Allow syncing GitHub data to individual notes using 'github-repo' frontmatter")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.enablePerNoteSync)
+          .onChange(async (value) => {
+            this.plugin.settings.enablePerNoteSync = value;
+            await this.plugin.saveSettings();
+            this.display(); // Refresh to show/hide dependent settings
+          }),
+      );
+
+    if (this.plugin.settings.enablePerNoteSync) {
+      new Setting(containerEl)
+        .setName("Scan folders")
+        .setDesc("Only scan for repo notes in these folders (one per line). Leave empty to scan all.")
+        .addTextArea((text) =>
+          text
+            .setPlaceholder("1 - Projects\n2 - Areas")
+            .setValue(this.plugin.settings.perNoteScanFolders.join("\n"))
+            .onChange(async (value) => {
+              this.plugin.settings.perNoteScanFolders = value
+                .split("\n")
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+              await this.plugin.saveSettings();
+            }),
+        );
+
+      new Setting(containerEl)
+        .setName("Exclude archived notes")
+        .setDesc("Do not sync notes that are in an 'Archive' or 'Archives' folder")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.excludeArchivedNotes)
+            .onChange(async (value) => {
+              this.plugin.settings.excludeArchivedNotes = value;
+              await this.plugin.saveSettings();
+            }),
+        );
+
+      containerEl.createEl("h3", { text: "Activity Summary" });
+
+      new Setting(containerEl)
+        .setName("Enable activity summary")
+        .setDesc("Add a section summarizing recent activity (commits, PRs, etc.)")
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.activitySummaryEnabled)
+            .onChange(async (value) => {
+              this.plugin.settings.activitySummaryEnabled = value;
+              await this.plugin.saveSettings();
+              this.display();
+            }),
+        );
+
+      if (this.plugin.settings.activitySummaryEnabled) {
+        new Setting(containerEl)
+          .setName("Activity lookback days")
+          .setDesc("How many days of history to include in the summary")
+          .addText((text) =>
+            text
+              .setType("number")
+              .setValue(this.plugin.settings.activitySummaryDays.toString())
+              .onChange(async (value) => {
+                const num = parseInt(value);
+                if (!isNaN(num) && num > 0) {
+                  this.plugin.settings.activitySummaryDays = num;
+                  await this.plugin.saveSettings();
+                }
+              }),
+          );
+
+        new Setting(containerEl)
+          .setName("Include commits")
+          .addToggle((toggle) =>
+            toggle
+              .setValue(this.plugin.settings.activityTypes.commits)
+              .onChange(async (value) => {
+                this.plugin.settings.activityTypes.commits = value;
+                await this.plugin.saveSettings();
+              }),
+          );
+
+        new Setting(containerEl)
+          .setName("Include merged PRs")
+          .addToggle((toggle) =>
+            toggle
+              .setValue(this.plugin.settings.activityTypes.mergedPRs)
+              .onChange(async (value) => {
+                this.plugin.settings.activityTypes.mergedPRs = value;
+                await this.plugin.saveSettings();
+              }),
+          );
+
+        new Setting(containerEl)
+          .setName("Include closed issues")
+          .addToggle((toggle) =>
+            toggle
+              .setValue(this.plugin.settings.activityTypes.closedIssues)
+              .onChange(async (value) => {
+                this.plugin.settings.activityTypes.closedIssues = value;
+                await this.plugin.saveSettings();
+              }),
+          );
+
+        new Setting(containerEl)
+          .setName("Include releases")
+          .addToggle((toggle) =>
+            toggle
+              .setValue(this.plugin.settings.activityTypes.releases)
+              .onChange(async (value) => {
+                this.plugin.settings.activityTypes.releases = value;
+                await this.plugin.saveSettings();
+              }),
+          );
+      }
+    }
 
     // Following pattern from https://github.com/zsviczian/obsidian-excalidraw-plugin/blob/master/src/core/settings.ts
     const callToActionDiv = containerEl.createDiv("ght-settings-cta");

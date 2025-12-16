@@ -132,4 +132,81 @@ export class GitHubClient {
     });
     return data.items;
   }
+
+  // --- New Repository-Specific Methods ---
+
+  async getRepoOpenIssues(owner: string, repo: string) {
+    const { data } = await this.octokit.issues.listForRepo({
+      owner,
+      repo,
+      state: "open",
+      sort: "updated",
+      direction: "desc",
+      per_page: 100,
+    });
+    // Filter out PRs, as listForRepo returns both issues and PRs
+    return data.filter((issue) => !issue.pull_request);
+  }
+
+  async getRepoOpenPRs(owner: string, repo: string) {
+    const { data } = await this.octokit.pulls.list({
+      owner,
+      repo,
+      state: "open",
+      sort: "updated",
+      direction: "desc",
+      per_page: 100,
+    });
+    return data;
+  }
+
+  async getRepoRecentCommits(owner: string, repo: string, since?: Date) {
+    const params: any = {
+      owner,
+      repo,
+      per_page: 20,
+    };
+    if (since) {
+      params.since = since.toISOString();
+    }
+    const { data } = await this.octokit.repos.listCommits(params);
+    return data;
+  }
+
+  async getRepoRecentMergedPRs(owner: string, repo: string, since?: Date) {
+    let q = `repo:${owner}/${repo} is:pr is:merged`;
+    if (since) {
+      q += ` merged:>=${since.toISOString().split("T")[0]}`;
+    }
+    const { data } = await this.octokit.search.issuesAndPullRequests({
+      q,
+      sort: "updated",
+      order: "desc",
+      per_page: 20,
+    });
+    return data.items;
+  }
+
+  async getRepoRecentClosedIssues(owner: string, repo: string, since?: Date) {
+    let q = `repo:${owner}/${repo} is:issue is:closed`;
+    if (since) {
+      q += ` closed:>=${since.toISOString().split("T")[0]}`;
+    }
+    const { data } = await this.octokit.search.issuesAndPullRequests({
+      q,
+      sort: "updated",
+      order: "desc",
+      per_page: 20,
+    });
+    return data.items;
+  }
+
+  async getRepoReleases(owner: string, repo: string, limit: number = 5) {
+    const { data } = await this.octokit.repos.listReleases({
+      owner,
+      repo,
+      per_page: limit,
+    });
+    return data;
+  }
 }

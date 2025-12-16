@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Agent Guidance
+
+This is an Obsidian plugin. For significant implementation work (new features, refactoring, bug fixes), invoke the `obsidian-extension-developer` agent to ensure consistent patterns and Obsidian API best practices.
+
 ## Repository Overview
 
 This is an Obsidian plugin that syncs GitHub issues and pull requests to Obsidian tasks. It provides one-way synchronization from GitHub to Obsidian, allowing users to track their GitHub work items within their Obsidian vault.
